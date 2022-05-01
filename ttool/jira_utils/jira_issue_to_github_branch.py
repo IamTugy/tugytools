@@ -4,7 +4,7 @@ import subprocess
 import typer
 from jira import Issue
 
-from jira_utils.scripts.utils import get_my_issues
+from ttool.jira_utils.utils import get_my_issues
 
 
 def generate_github_branch_from_issue(issue: Issue) -> str:

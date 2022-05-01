@@ -3,7 +3,7 @@ import inquirer
 import typer
 from jira import JIRAError
 
-from jira_utils.scripts.utils import CONFIG_FILE, get_config, Config, get_jira_projects
+from ttool.jira_utils.utils import CONFIG_FILE, get_config, Config, get_jira_projects
 
 YES = 'yes'
 NO = 'no'
