@@ -1,16 +1,18 @@
 import os
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from functools import cache
 from pathlib import Path
 from typing import List, Tuple, Optional
 
+import typer
 from dacite import from_dict
 from jira import JIRA, Issue, Project
 import yaml
 
 
-CONFIG_FILE = 'jira_utils/config.yaml'
+CONFIG_RELATIVE_PATH = Path('.tugy_utils/jira/.config.yaml')
+CONFIG_FILE = Path(os.environ['HOME']) / CONFIG_RELATIVE_PATH
 JIRA_API_TOKEN = 'JIRA_API_TOKEN'
 JIRA_MAIL = 'JIRA_MAIL'
 
@@ -20,13 +22,19 @@ class Config:
     server: Optional[str] = field(default=None)
     project_name: Optional[str] = field(default=None)
 
+    def save(self):
+        CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
+
+        with CONFIG_FILE.open('w') as fp:
+            yaml.safe_dump(asdict(self), fp, default_flow_style=False)
+            typer.secho(f"Config file saved in {CONFIG_FILE}", fg=typer.colors.GREEN)
+
 
 def get_config() -> Config:
-    config_file = Path(CONFIG_FILE)
-    if not config_file.exists():
+    if not CONFIG_FILE.exists():
         return Config()
 
-    with Path(CONFIG_FILE).open() as fp:
+    with CONFIG_FILE.open() as fp:
         return from_dict(Config, yaml.safe_load(fp))
 
 

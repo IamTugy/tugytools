@@ -1,33 +1,16 @@
-""" Set up your jira configurations.
-    Make sure that JIRA_API_TOKEN and JIRA_MAIL are already configured in your shell.
-
-    Usage:
-        set_up.py
-        set_up.py (-h | --help)
-
-    Options:
-        -h --help   Show this screen.
-"""
-from docopt import docopt
-from dataclasses import asdict
-
 import inquirer
 
-from pathlib import Path
-
-import yaml
+import typer
 from jira import JIRAError
 
-from utils import CONFIG_FILE, get_config, Config, get_jira_projects
+from jira_utils.scripts.utils import CONFIG_FILE, get_config, Config, get_jira_projects
 
 YES = 'yes'
 NO = 'no'
 
 
 def set_up_jira():
-    config_file = Path(CONFIG_FILE)
-
-    if config_file.exists():
+    if CONFIG_FILE.exists():
         questions = [
             inquirer.Confirm(
                 'continue',
@@ -50,14 +33,14 @@ def set_up_jira():
 
     server = inquirer.prompt(questions)['server']
     if not server:
-        print("Atlassian server was not entered! run set_up again")
-        return
+        typer.secho("Atlassian server was not entered! run set_up again", fg=typer.colors.RED, err=True)
+        raise typer.Exit()
 
     try:
         projects = get_jira_projects(server)
     except JIRAError:
-        print("The given atlassian server is invalid")
-        return
+        typer.secho("The given atlassian server is invalid", fg=typer.colors.RED, err=True)
+        raise typer.Exit()
 
     choices = {project.key: f"{project.key}: {project.name}" for project in projects}
     questions = [
@@ -75,11 +58,13 @@ def set_up_jira():
             project_name = key
 
     config = Config(server=server, project_name=project_name)
+    config.save()
 
-    with config_file.open('w') as fp:
-        yaml.safe_dump(asdict(config), fp, default_flow_style=False)
+
+def setup():
+    """Set up your jira configurations."""
+    set_up_jira()
 
 
 if __name__ == '__main__':
-    docopt(__doc__)
-    set_up_jira()
+    typer.run(setup)

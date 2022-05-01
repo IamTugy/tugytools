@@ -1,18 +1,7 @@
-""" Checkout/Print your chosen jira issue with 'ISSUE-ID/the-issue-summery' format.
-
-    Usage:
-        jira_issue_to_github_branch.py [--checkout | --print]
-        jira_issue_to_github_branch.py (-h | --help)
-
-    Options:
-        -h --help   Show this screen.
-        --checkout  Git Checkout -b to the desired branch
-        --print     Print how would the desired branch called
-"""
-
 import inquirer
 import subprocess
-from docopt import docopt
+
+import typer
 from jira import Issue
 
 from jira_utils.scripts.utils import get_my_issues
@@ -27,8 +16,8 @@ def get_issue_to_github_selector() -> str:
     issues = get_my_issues()
 
     if not issues:
-        print("You have no issues assigned to you")
-        raise
+        typer.echo("You have no issues assigned to you")
+        raise typer.Exit()
 
     choices = {issue: f"{issue.key} - {issue.get_field('status')} - {issue.get_field('summary')}" for issue in issues}
     questions = [
@@ -44,19 +33,21 @@ def get_issue_to_github_selector() -> str:
             return generate_github_branch_from_issue(issue)
 
 
-if __name__ == '__main__':
-    arguments = docopt(__doc__)
-    should_print = arguments.get('--print')
-    should_checkout = arguments.get('--checkout')
+def run_jira_issue_to_github_branch(should_print: bool):
+    branch_name = get_issue_to_github_selector()
 
-    if should_checkout or should_print:
-        branch_name = get_issue_to_github_selector()
-
-        if should_print:
-            print(branch_name)
-
-        if should_checkout:
-            subprocess.Popen(["git", "checkout", "-b", branch_name])
+    if should_print:
+        print(branch_name)
 
     else:
-        print("You must use --print or --checkout")
+        subprocess.Popen(["git", "checkout", "-b", branch_name])
+
+
+def checkout(print: bool = False):
+    """Checkout/Print your chosen jira issue with 'ISSUE-ID/the-issue-summery' format.
+    use --print to print the branch name without checkout"""
+    run_jira_issue_to_github_branch(should_print=print)
+
+
+if __name__ == '__main__':
+    typer.run(checkout)
