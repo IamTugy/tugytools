@@ -1,4 +1,18 @@
+""" Checkout/Print your chosen jira issue with 'ISSUE-ID/the-issue-summery' format.
+
+    Usage:
+        jira_issue_to_github_branch.py [--checkout | --print]
+        jira_issue_to_github_branch.py (-h | --help)
+
+    Options:
+        -h --help   Show this screen.
+        --checkout  Git Checkout -b to the desired branch
+        --print     Print how would the desired branch called
+"""
+
 import inquirer
+import subprocess
+from docopt import docopt
 from jira import Issue
 
 from jira_utils.scripts.utils import get_my_issues
@@ -31,4 +45,18 @@ def get_issue_to_github_selector() -> str:
 
 
 if __name__ == '__main__':
-    print(get_issue_to_github_selector())
+    arguments = docopt(__doc__)
+    should_print = arguments.get('--print')
+    should_checkout = arguments.get('--checkout')
+
+    if should_checkout or should_print:
+        branch_name = get_issue_to_github_selector()
+
+        if should_print:
+            print(branch_name)
+
+        if should_checkout:
+            subprocess.Popen(["git", "checkout", "-b", branch_name])
+
+    else:
+        print("You must use --print or --checkout")
