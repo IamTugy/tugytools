@@ -15,6 +15,7 @@ jira = "^3.2.0"
 PyYAML = "^6.0"
 dacite = "^1.6.0"
 inquirer = "^2.9.2"
+docopt = "^0.6.2"
 
 [tool.poetry.dev-dependencies]
 ipdb = "^0.13.9"

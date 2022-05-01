@@ -1,3 +1,14 @@
+""" Set up your jira configurations.
+    Make sure that JIRA_API_TOKEN and JIRA_MAIL are already configured in your shell.
+
+    Usage:
+        set_up.py
+        set_up.py (-h | --help)
+
+    Options:
+        -h --help   Show this screen.
+"""
+from docopt import docopt
 from dataclasses import asdict
 
 import inquirer
@@ -70,4 +81,5 @@ def set_up_jira():
 
 
 if __name__ == '__main__':
+    docopt(__doc__)
     set_up_jira()
