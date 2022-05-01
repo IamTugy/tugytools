@@ -154,3 +154,5 @@ cython_debug/
 
 .idea
 .DS_Store
+
+./jira_utils/config.yaml
