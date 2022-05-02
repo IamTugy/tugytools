@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ttool"
-version = "0.1.0"
+version = "0.1.0.1"
 description = "Tugys utils tools"
 authors = ["IamTugy <tugmica@gmail.com>"]
 readme = "README.md"
@@ -12,7 +12,7 @@ description = "Tugys utils tools"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = ">=3.6"
 jira = "^3.2.0"
 PyYAML = "^6.0"
 dacite = "^1.6.0"

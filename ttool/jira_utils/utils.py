@@ -1,7 +1,7 @@
 import os
 
 from dataclasses import dataclass, field, asdict
-from functools import cache
+from functools import lru_cache
 from pathlib import Path
 from typing import List, Tuple, Optional
 
@@ -11,7 +11,7 @@ from jira import JIRA, Issue, Project
 import yaml
 
 
-CONFIG_RELATIVE_PATH = Path('.tugy_utils/jira/.config.yaml')
+CONFIG_RELATIVE_PATH = Path('.ttool/jira/.config.yaml')
 CONFIG_FILE = Path(os.environ['HOME']) / CONFIG_RELATIVE_PATH
 JIRA_API_TOKEN = 'JIRA_API_TOKEN'
 JIRA_MAIL = 'JIRA_MAIL'
@@ -48,7 +48,7 @@ def get_auth() -> Tuple[str, str]:
     return token_auth, mail_auth
 
 
-@cache
+@lru_cache
 def get_jira(server: str = None) -> JIRA:
     if not server:
         config = get_config()
