@@ -43,7 +43,7 @@ def get_auth() -> Tuple[str, str]:
     mail_auth = os.environ.get(JIRA_MAIL)
 
     if not (token_auth and mail_auth):
-        raise f"{JIRA_API_TOKEN} and {JIRA_MAIL} env virables must be configured"
+        raise f"{JIRA_API_TOKEN} and {JIRA_MAIL} env variables must be configured"
 
     return token_auth, mail_auth
 
@@ -64,7 +64,7 @@ def get_my_issues() -> List[Issue]:
     i = 0
     chunk_size = 100
     while True:
-        chunk = jira_client.search_issues(f'assignee = currentUser() and project = {project_name}',
+        chunk = jira_client.search_issues(f'assignee = currentUser() and project = {project_name} and status != Done',
                                           startAt=i, maxResults=chunk_size)
         i += chunk_size
         issues += chunk.iterable

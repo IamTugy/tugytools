@@ -62,7 +62,11 @@ def set_up_jira():
 
 
 def setup():
-    """Set up your jira configurations."""
+    """Set up your jira configurations.
+    Before that make sure youve configured this 2 local env variables:
+    JIRA_API_TOKEN: create one here - https://id.atlassian.com/manage-profile/security/api-tokens
+    JIRA_MAIL: your jira email
+    """
     set_up_jira()
 
 

@@ -1,3 +1,5 @@
+from typing import Optional
+
 import inquirer
 import subprocess
 
@@ -12,7 +14,7 @@ def generate_github_branch_from_issue(issue: Issue) -> str:
     return f"{issue.key}/{'-'.join(s.split())}"
 
 
-def get_issue_to_github_selector() -> str:
+def get_issue_to_github_selector() -> Optional[str]:
     issues = get_my_issues()
 
     if not issues:
@@ -28,6 +30,10 @@ def get_issue_to_github_selector() -> str:
         ),
     ]
     answers = inquirer.prompt(questions)
+
+    if not answers:
+        return
+
     for issue, choice in choices.items():
         if choice == answers['issue']:
             return generate_github_branch_from_issue(issue)
@@ -35,6 +41,8 @@ def get_issue_to_github_selector() -> str:
 
 def run_jira_issue_to_github_branch(should_print: bool):
     branch_name = get_issue_to_github_selector()
+    if not branch_name:
+        return
 
     if should_print:
         print(branch_name)

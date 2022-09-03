@@ -2,6 +2,8 @@
 
 This Repository is for utils that me, Tugy, thought that will be usefull.
 
+Author: [Tugy](https://github.com/IamTugy) | Github Repo: [tugytools](https://github.com/IamTugy/tugytools)
+
 ## Installation:
     $ pip install ttool
 ## Packages:
