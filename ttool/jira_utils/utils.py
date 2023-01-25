@@ -1,13 +1,14 @@
 import os
 
 from dataclasses import dataclass, field, asdict
+from enum import Enum
 from functools import lru_cache
 from pathlib import Path
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Union
 
 import typer
 from dacite import from_dict
-from jira import JIRA, Issue, Project
+from jira import JIRA, Issue, Project, JIRAError
 import yaml
 
 
@@ -17,10 +18,23 @@ JIRA_API_TOKEN = 'JIRA_API_TOKEN'
 JIRA_MAIL = 'JIRA_MAIL'
 
 
+class JiraHostType(Enum):
+    Local = "Local"
+    Cloud = "Cloud"
+
+    @staticmethod
+    def represent(dumper: yaml.Dumper, host_type: "JiraHostType"):
+        return dumper.represent_scalar('tag:yaml.org,2002:str', host_type.name)
+
+
+yaml.add_representer(JiraHostType, JiraHostType.represent)
+
+
 @dataclass
 class Config:
     server: Optional[str] = field(default=None)
     project_name: Optional[str] = field(default=None)
+    jira_host_type: Optional[Union[JiraHostType, str]] = field(default=None)
 
     def save(self):
         CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -49,12 +63,41 @@ def get_auth() -> Tuple[str, str]:
 
 
 @lru_cache
-def get_jira(server: str = None) -> JIRA:
-    if not server:
+def get_jira_client(jira_server_url: str, jira_email: str, jira_api_token: str, jira_host_type: JiraHostType) -> JIRA:
+    kwargs = {
+        JiraHostType.Local: dict(token_auth=jira_api_token),
+        JiraHostType.Cloud: dict(basic_auth=(jira_email, jira_api_token))
+    }.get(jira_host_type)
+    return JIRA(jira_server_url, **kwargs)
+
+
+@lru_cache
+def get_jira(server: str = None, jira_host_type: str = None) -> JIRA:
+    if not server or not jira_host_type:
         config = get_config()
-        server = config.server
+        server = server or config.server
+        jira_host_type = jira_host_type or config.jira_host_type
     token_auth, mail_auth = get_auth()
-    return JIRA(server, basic_auth=(mail_auth, token_auth))
+
+    try:
+        jira_host_type = JiraHostType[jira_host_type] if isinstance(jira_host_type, str) else jira_host_type
+    except KeyError:
+        raise "Host type is not valid"
+
+    jira_client = get_jira_client(
+        jira_server_url=server,
+        jira_email=mail_auth,
+        jira_api_token=token_auth,
+        jira_host_type=jira_host_type
+    )
+
+    # validate user authentication:
+    try:
+        jira_client.current_user()
+    except JIRAError:
+        raise "Client must be authenticated to access this resource"
+
+    return jira_client
 
 
 def get_my_issues() -> List[Issue]:
@@ -63,9 +106,12 @@ def get_my_issues() -> List[Issue]:
     issues: List[Issue] = []
     i = 0
     chunk_size = 100
+
     while True:
-        chunk = jira_client.search_issues(f'assignee = currentUser() and project = {project_name} and status != Done',
-                                          startAt=i, maxResults=chunk_size)
+        chunk = jira_client.search_issues(
+            f'assignee = currentUser() and project = {project_name} and status not in (Done, Closed)',
+            startAt=i, maxResults=chunk_size
+        )
         i += chunk_size
         issues += chunk.iterable
         if i >= chunk.total:
@@ -73,6 +119,6 @@ def get_my_issues() -> List[Issue]:
     return issues
 
 
-def get_jira_projects(server: str = None) -> List[Project]:
-    jira_client = get_jira(server)
+def get_jira_projects(server: str = None, jira_host_type: str = None) -> List[Project]:
+    jira_client = get_jira(server, jira_host_type)
     return jira_client.projects()
